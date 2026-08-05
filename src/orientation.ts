@@ -1,8 +1,8 @@
+const LANDSCAPE_MOBILE_QUERY =
+  '(orientation: landscape) and (max-height: 900px) and (hover: none) and (pointer: coarse)'
+
 export function isLandscapeMobile(): boolean {
-  const w = window.innerWidth
-  const h = window.innerHeight
-  if (w <= h) return false
-  return Math.min(w, h) <= 1024
+  return window.matchMedia(LANDSCAPE_MOBILE_QUERY).matches
 }
 
 export function updatePortraitLock(): void {
@@ -12,7 +12,9 @@ export function updatePortraitLock(): void {
 
   overlay?.classList.toggle('hidden', !locked)
   document.body.classList.toggle('is-landscape-locked', locked)
-  if (app) app.inert = locked
+  if (app && 'inert' in app) {
+    app.inert = locked
+  }
 }
 
 export async function tryLockPortrait(): Promise<void> {
@@ -23,10 +25,20 @@ export async function tryLockPortrait(): Promise<void> {
   }
 }
 
+function listenForLandscapeChange(mq: MediaQueryList, handler: () => void): void {
+  if (typeof mq.addEventListener === 'function') {
+    mq.addEventListener('change', handler)
+    return
+  }
+
+  mq.addListener(handler)
+}
+
 export function initPortraitLock(): void {
+  const mq = window.matchMedia(LANDSCAPE_MOBILE_QUERY)
+
   updatePortraitLock()
-  window.addEventListener('resize', updatePortraitLock)
+  listenForLandscapeChange(mq, updatePortraitLock)
   window.addEventListener('orientationchange', updatePortraitLock)
-  window.visualViewport?.addEventListener('resize', updatePortraitLock)
   document.addEventListener('pointerdown', () => void tryLockPortrait(), { once: true })
 }
