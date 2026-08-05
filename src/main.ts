@@ -1,4 +1,5 @@
 import { buildFilterOptions, fetchGames, gameMatchesFilter, type Game } from './games'
+import { initPortraitLock } from './orientation'
 import './style.css'
 
 let games: Game[] = []
@@ -26,8 +27,31 @@ function neonRushVisual(): string {
   `
 }
 
+function mindSyncVisual(): string {
+  return `
+    <div class="visual-aura"></div>
+    <div class="visual-puzzle-wrap">
+      <div class="visual-puzzle-board">
+        <span class="visual-tile ms-t1">1</span>
+        <span class="visual-tile ms-t2">2</span>
+        <span class="visual-tile ms-t3">3</span>
+        <span class="visual-tile ms-t4">4</span>
+        <span class="visual-tile ms-t5">5</span>
+        <span class="visual-tile ms-t6">6</span>
+        <span class="visual-tile ms-t7">7</span>
+        <span class="visual-tile ms-t8 ms-slide">8</span>
+        <span class="visual-tile ms-empty"></span>
+      </div>
+    </div>
+    <span class="visual-ms-sparkle sparkle-a"></span>
+    <span class="visual-ms-sparkle sparkle-b"></span>
+    <span class="visual-ms-fox" aria-hidden="true">🦊</span>
+  `
+}
+
 function proceduralVisual(visual: string): string {
   if (visual === 'neon-rush-visual') return neonRushVisual()
+  if (visual === 'mind-sync-visual') return mindSyncVisual()
   return `<div class="visual-aura"></div><div class="visual-scan"></div>`
 }
 
@@ -397,6 +421,7 @@ function setupScrollEffects(): void {
 }
 
 async function bootstrap(): Promise<void> {
+  initPortraitLock()
   renderLayout()
   showGamesLoading()
   setupHeroTypewriter()
