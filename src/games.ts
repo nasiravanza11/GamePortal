@@ -8,6 +8,7 @@ export type Game = {
   visual: string
 }
 
+
 type GameRow = {
   title: string
   description: string | null
