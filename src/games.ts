@@ -30,7 +30,7 @@ function getSupabaseConfig(): { url: string; key: string } {
 
   if (!url || !key) {
     throw new Error(
-      'Missing Supabase env vars. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to .env',
+      'Missing Supabase env vars at build time. Local: add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env. Cloudflare Git deploy: set the same variables under Workers → Settings → Build → environment variables, then redeploy.',
     )
   }
 
