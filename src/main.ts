@@ -1,5 +1,4 @@
 import { buildFilterOptions, fetchGames, gameMatchesFilter, type Game } from './games'
-import { initPortraitLock } from './orientation'
 import './style.css'
 
 let games: Game[] = []
@@ -420,31 +419,11 @@ function setupScrollEffects(): void {
   updateScrollEffects()
 }
 
-function showBootstrapError(error: unknown): void {
-  const message = error instanceof Error ? error.message : 'Could not start the arcade.'
-  const app = document.querySelector<HTMLDivElement>('#app')
-  if (!app) return
-
-  app.innerHTML = `
-    <main style="max-width:720px;margin:0 auto;padding:2rem;font-family:system-ui,sans-serif;color:#eefcf9">
-      <h1 style="margin:0 0 0.75rem;font-size:1.25rem">NextGen Arcade failed to load</h1>
-      <p style="margin:0;color:#f0b8cc;line-height:1.6">${message}</p>
-    </main>
-  `
-  console.error(error)
-}
-
 async function bootstrap(): Promise<void> {
   renderLayout()
   showGamesLoading()
   setupHeroTypewriter()
   setupScrollEffects()
-
-  try {
-    initPortraitLock()
-  } catch (error) {
-    console.warn('Portrait lock unavailable:', error)
-  }
 
   try {
     games = await fetchGames()
@@ -459,4 +438,4 @@ async function bootstrap(): Promise<void> {
   }
 }
 
-bootstrap().catch(showBootstrapError)
+bootstrap()
