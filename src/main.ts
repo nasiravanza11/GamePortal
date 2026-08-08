@@ -49,22 +49,35 @@ function mindSyncVisual(): string {
 }
 
 function picturePuzzleVisual(): string {
+  const tiles = Array.from({ length: 16 }, (_, i) => {
+    const col = i % 4
+    const row = Math.floor(i / 4)
+    if (i === 10) return `<span class="pp-tile pp-empty" style="--c:${col};--r:${row}"></span>`
+    const slide = i === 9 ? ' pp-slide' : ''
+    return `<span class="pp-tile${slide}" style="--c:${col};--r:${row}"></span>`
+  }).join('')
+
   return `
     <div class="visual-aura"></div>
-    <div class="visual-puzzle-wrap">
-      <div class="visual-picture-board" aria-hidden="true">
-        <span class="visual-picture-tile pp-t1"></span>
-        <span class="visual-picture-tile pp-t2"></span>
-        <span class="visual-picture-tile pp-t3"></span>
-        <span class="visual-picture-tile pp-t4"></span>
-        <span class="visual-picture-tile pp-t5 pp-slide"></span>
-        <span class="visual-picture-tile pp-t6"></span>
-        <span class="visual-picture-tile pp-t7"></span>
-        <span class="visual-picture-tile pp-empty"></span>
-        <span class="visual-picture-tile pp-t9"></span>
+    <div class="visual-pp-stage" aria-hidden="true">
+      <div class="visual-pp-brand">
+        <i></i><b>SnapTiles</b>
+      </div>
+      <div class="visual-pp-stats">
+        <span class="pp-stat pp-ocean">Ocean</span>
+        <span class="pp-stat">0:00</span>
+        <span class="pp-stat">0</span>
+        <span class="pp-stat pp-hint">3</span>
+      </div>
+      <div class="visual-pp-board">${tiles}</div>
+      <div class="visual-pp-dock">
+        <span class="pp-btn pp-y"></span>
+        <span class="pp-btn pp-o"></span>
+        <span class="pp-btn pp-b"></span>
+        <span class="pp-btn pp-p"></span>
+        <span class="pp-btn pp-g"></span>
       </div>
     </div>
-    <span class="visual-pp-shine"></span>
   `
 }
 
