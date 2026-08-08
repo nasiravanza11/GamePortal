@@ -26,8 +26,65 @@ function neonRushVisual(): string {
   `
 }
 
+function mindSyncVisual(): string {
+  return `
+    <div class="visual-aura"></div>
+    <div class="visual-puzzle-wrap">
+      <div class="visual-puzzle-board">
+        <span class="visual-tile ms-t1">1</span>
+        <span class="visual-tile ms-t2">2</span>
+        <span class="visual-tile ms-t3">3</span>
+        <span class="visual-tile ms-t4">4</span>
+        <span class="visual-tile ms-t5">5</span>
+        <span class="visual-tile ms-t6">6</span>
+        <span class="visual-tile ms-t7">7</span>
+        <span class="visual-tile ms-t8 ms-slide">8</span>
+        <span class="visual-tile ms-empty"></span>
+      </div>
+    </div>
+    <span class="visual-ms-sparkle sparkle-a"></span>
+    <span class="visual-ms-sparkle sparkle-b"></span>
+    <span class="visual-ms-fox" aria-hidden="true">🦊</span>
+  `
+}
+
+function picturePuzzleVisual(): string {
+  const tiles = Array.from({ length: 16 }, (_, i) => {
+    const col = i % 4
+    const row = Math.floor(i / 4)
+    if (i === 10) return `<span class="pp-tile pp-empty" style="--c:${col};--r:${row}"></span>`
+    const slide = i === 9 ? ' pp-slide' : ''
+    return `<span class="pp-tile${slide}" style="--c:${col};--r:${row}"></span>`
+  }).join('')
+
+  return `
+    <div class="visual-aura"></div>
+    <div class="visual-pp-stage" aria-hidden="true">
+      <div class="visual-pp-brand">
+        <i></i><b>SnapTiles</b>
+      </div>
+      <div class="visual-pp-stats">
+        <span class="pp-stat pp-ocean">Ocean</span>
+        <span class="pp-stat">0:00</span>
+        <span class="pp-stat">0</span>
+        <span class="pp-stat pp-hint">3</span>
+      </div>
+      <div class="visual-pp-board">${tiles}</div>
+      <div class="visual-pp-dock">
+        <span class="pp-btn pp-y"></span>
+        <span class="pp-btn pp-o"></span>
+        <span class="pp-btn pp-b"></span>
+        <span class="pp-btn pp-p"></span>
+        <span class="pp-btn pp-g"></span>
+      </div>
+    </div>
+  `
+}
+
 function proceduralVisual(visual: string): string {
   if (visual === 'neon-rush-visual') return neonRushVisual()
+  if (visual === 'mind-sync-visual') return mindSyncVisual()
+  if (visual === 'picture-puzzle-visual') return picturePuzzleVisual()
   return `<div class="visual-aura"></div><div class="visual-scan"></div>`
 }
 

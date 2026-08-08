@@ -8,7 +8,6 @@ export type Game = {
   visual: string
 }
 
-
 type GameRow = {
   title: string
   description: string | null
@@ -21,20 +20,56 @@ type GameRow = {
   created_at?: string | null
 }
 
+type SupabaseConfig = {
+  url: string
+  key: string
+}
+
+type SupabaseConfigFile = {
+  url?: string
+  anonKey?: string
+}
+
 const FILTER_ORDER = ['Endless', 'Racing', 'Battle', 'Puzzle', 'Arcade']
 
-function getSupabaseConfig(): { url: string; key: string } {
+let cachedConfig: SupabaseConfig | null = null
+
+function envSupabaseConfig(): SupabaseConfig | null {
   const url = import.meta.env.VITE_SUPABASE_URL ?? import.meta.env.NEXT_PUBLIC_SUPABASE_URL
   const key =
     import.meta.env.VITE_SUPABASE_ANON_KEY ?? import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url || !key) {
+  if (!url || !key) return null
+
+  return { url: url.replace(/\/$/, ''), key }
+}
+
+async function loadSupabaseConfig(): Promise<SupabaseConfig> {
+  if (cachedConfig) return cachedConfig
+
+  const fromEnv = envSupabaseConfig()
+  if (fromEnv) {
+    cachedConfig = fromEnv
+    return fromEnv
+  }
+
+  const response = await fetch('/supabase.json')
+  if (!response.ok) {
     throw new Error(
-      'Missing Supabase env vars at build time. Local: add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env. Cloudflare Git deploy: set the same variables under Workers → Settings → Build → environment variables, then redeploy.',
+      'Missing Supabase config. Add public/supabase.json or set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env',
     )
   }
 
-  return { url: url.replace(/\/$/, ''), key }
+  const data = (await response.json()) as SupabaseConfigFile
+  const url = data.url?.trim()
+  const key = data.anonKey?.trim()
+
+  if (!url || !key) {
+    throw new Error('public/supabase.json must include "url" and "anonKey".')
+  }
+
+  cachedConfig = { url: url.replace(/\/$/, ''), key }
+  return cachedConfig
 }
 
 function parseStatus(value: string | null): Game['status'] {
@@ -86,7 +121,7 @@ export function buildFilterOptions(games: Game[]): string[] {
 }
 
 export async function fetchGames(): Promise<Game[]> {
-  const { url, key } = getSupabaseConfig()
+  const { url, key } = await loadSupabaseConfig()
   const endpoint = `${url}/rest/v1/games?select=title,description,genre,url,status,accent,visual,sort_order,created_at&order=sort_order.asc.nullslast,created_at.asc`
 
   const response = await fetch(endpoint, {
