@@ -48,9 +48,30 @@ function mindSyncVisual(): string {
   `
 }
 
+function picturePuzzleVisual(): string {
+  return `
+    <div class="visual-aura"></div>
+    <div class="visual-puzzle-wrap">
+      <div class="visual-picture-board" aria-hidden="true">
+        <span class="visual-picture-tile pp-t1"></span>
+        <span class="visual-picture-tile pp-t2"></span>
+        <span class="visual-picture-tile pp-t3"></span>
+        <span class="visual-picture-tile pp-t4"></span>
+        <span class="visual-picture-tile pp-t5 pp-slide"></span>
+        <span class="visual-picture-tile pp-t6"></span>
+        <span class="visual-picture-tile pp-t7"></span>
+        <span class="visual-picture-tile pp-empty"></span>
+        <span class="visual-picture-tile pp-t9"></span>
+      </div>
+    </div>
+    <span class="visual-pp-shine"></span>
+  `
+}
+
 function proceduralVisual(visual: string): string {
   if (visual === 'neon-rush-visual') return neonRushVisual()
   if (visual === 'mind-sync-visual') return mindSyncVisual()
+  if (visual === 'picture-puzzle-visual') return picturePuzzleVisual()
   return `<div class="visual-aura"></div><div class="visual-scan"></div>`
 }
 
