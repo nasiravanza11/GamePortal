@@ -3,6 +3,7 @@ import {
   portfolioLinkAttrs,
   resumePdfUrl,
 } from './site-config'
+import { renderGamePlayerShell } from './game-player'
 import { renderSocialLinks } from './social-links'
 
 export type SitePage = 'home' | 'games' | 'about' | 'contact'
@@ -211,7 +212,8 @@ export function mountPage(current: SitePage, mainHtml: string): void {
   <main id="top">${mainHtml}</main>
   ${renderFooter()}
   ${renderSiteMenu()}
-  ${renderSoundConsent()}`
+  ${renderSoundConsent()}
+  ${renderGamePlayerShell()}`
 }
 
 function renderSoundConsent(): string {

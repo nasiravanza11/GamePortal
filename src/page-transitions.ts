@@ -1,5 +1,6 @@
-const EXIT_MS = 420
-const ENTER_MS = 480
+const STORAGE_KEY = 'rao-page-exit'
+const EXIT_MS = 520
+const ENTER_MS = 560
 
 function normalizePath(path: string): string {
   let p = path.replace(/\\/g, '/')
@@ -35,29 +36,23 @@ function isInternalPageLink(anchor: HTMLAnchorElement): URL | null {
 
   const samePath = normalizePath(next.pathname) === normalizePath(current.pathname)
   if (samePath && next.hash) return null
-
   if (samePath && !next.hash) return null
 
   return next
 }
 
-function ensureOverlay(): HTMLElement {
-  let overlay = document.querySelector<HTMLElement>('.page-transition-overlay')
-  if (!overlay) {
-    overlay = document.createElement('div')
-    overlay.className = 'page-transition-overlay'
-    overlay.setAttribute('aria-hidden', 'true')
-    document.body.append(overlay)
-  }
-  return overlay
+function getOverlay(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('.page-transition-overlay')
+}
+
+function getApp(): HTMLElement | null {
+  return document.querySelector<HTMLElement>('#app')
 }
 
 export function setupPageTransitions(): void {
   const root = document.documentElement
   if (root.dataset.pageTransitions === '1') return
   root.dataset.pageTransitions = '1'
-
-  ensureOverlay()
 
   if ('scrollRestoration' in history) {
     history.scrollRestoration = 'manual'
@@ -75,26 +70,60 @@ export function setupPageTransitions(): void {
   }
 
   const markReady = (): void => {
-    root.classList.remove('page-entering', 'page-enter-active', 'page-loading')
+    root.classList.remove(
+      'page-entering',
+      'page-enter-active',
+      'page-loading',
+      'page-exiting',
+      'page-exiting-active',
+    )
     root.classList.add('page-ready')
+    sessionStorage.removeItem(STORAGE_KEY)
     requestAnimationFrame(scrollToHashTarget)
   }
 
   const runEnter = (): void => {
     window.scrollTo(0, 0)
+    const overlay = getOverlay()
+    const app = getApp()
+
     if (reduceMotion) {
+      overlay?.style.removeProperty('opacity')
       markReady()
       return
     }
 
     root.classList.remove('page-exiting', 'page-exiting-active', 'page-ready')
     root.classList.add('page-entering', 'page-loading')
+
+    if (overlay) overlay.style.opacity = '1'
+
+    let finished = false
+    const finish = (): void => {
+      if (finished) return
+      finished = true
+      markReady()
+    }
+
+    const onOpacityDone = (event: TransitionEvent): void => {
+      if (event.propertyName !== 'opacity') return
+      if (event.target !== app && event.target !== overlay) return
+      finish()
+    }
+
+    app?.addEventListener('transitionend', onOpacityDone)
+    overlay?.addEventListener('transitionend', onOpacityDone)
+    window.setTimeout(finish, ENTER_MS + 80)
+
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         root.classList.add('page-enter-active')
       })
     })
-    window.setTimeout(markReady, ENTER_MS)
+  }
+
+  if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+    root.classList.add('page-loading')
   }
 
   runEnter()
@@ -131,14 +160,33 @@ export function setupPageTransitions(): void {
       exiting = true
       document.body.classList.remove('menu-open')
 
+      const app = getApp()
+      const overlay = getOverlay()
+      root.classList.remove('page-ready')
       root.classList.add('page-exiting')
+
+      let navigated = false
+      const navigate = (): void => {
+        if (navigated) return
+        navigated = true
+        sessionStorage.setItem(STORAGE_KEY, '1')
+        location.assign(next.href)
+      }
+
+      const onExitDone = (transitionEvent: TransitionEvent): void => {
+        if (transitionEvent.propertyName !== 'opacity') return
+        if (transitionEvent.target !== app && transitionEvent.target !== overlay) return
+        navigate()
+      }
+
+      app?.addEventListener('transitionend', onExitDone, { once: true })
+      overlay?.addEventListener('transitionend', onExitDone, { once: true })
+      window.setTimeout(navigate, EXIT_MS + 80)
+
       requestAnimationFrame(() => {
         root.classList.add('page-exiting-active')
+        if (overlay) overlay.style.opacity = '1'
       })
-
-      window.setTimeout(() => {
-        location.assign(next.href)
-      }, EXIT_MS)
     },
     true,
   )

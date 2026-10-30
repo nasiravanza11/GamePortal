@@ -14,7 +14,7 @@ const REVEAL_BY_PAGE: Record<SitePage, string> = {
   home: '.section-heading, .filter-bar, .about-section, .contact-section',
   games: '.filter-bar',
   about: '.about-section',
-  contact: '.contact-section',
+  contact: '.contact-section, .arcade-hub',
 }
 
 export function setupGamesToolbarGlass(): void {

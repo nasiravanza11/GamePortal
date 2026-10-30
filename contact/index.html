@@ -4,6 +4,22 @@
     <script>
       document.documentElement.classList.add('page-loading')
     </script>
+    <style>
+      html.page-loading #app {
+        opacity: 0;
+      }
+      html.page-loading body {
+        background: #030508;
+      }
+      .page-transition-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 120000;
+        pointer-events: none;
+        background: #030508;
+        opacity: 1;
+      }
+    </style>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -12,6 +28,7 @@
     <title>Contact — Rao Arcade</title>
   </head>
   <body>
+    <div class="page-transition-overlay" aria-hidden="true"></div>
     <div id="app"></div>
     <script type="module" src="/src/pages/contact.ts"></script>
   </body>

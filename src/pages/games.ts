@@ -10,7 +10,7 @@ import { initGamesPage } from '../games-ui'
 import { mountPage } from '../layout'
 import { gamesSection } from '../sections'
 
-mountPage('games', gamesSection({ showFloorIndex: false }))
+mountPage('games', gamesSection({ showFloorIndex: false, showLibraryTools: true }))
 
 document.body.classList.add('is-games-page')
 

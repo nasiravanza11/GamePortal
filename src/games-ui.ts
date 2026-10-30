@@ -5,9 +5,27 @@ import {
   gameMatchesFilter,
   type Game,
 } from './games'
+import {
+  gameStorageKey,
+  getFavoriteKeys,
+  getRecentGames,
+  isFavorite,
+  toggleFavorite,
+} from './arcade-storage'
+import { setupGamePlayer } from './game-player'
 import { arrowIcon } from './site-config'
 
 let games: Game[] = []
+let activeGenreFilter = 'All'
+let activeLibrary: 'favorites' | 'recent' | null = null
+
+function escapeAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
 
 function neonRushVisual(): string {
   return `
@@ -83,9 +101,25 @@ function proceduralVisual(visual: string): string {
   return `<div class="visual-aura"></div><div class="visual-scan"></div>`
 }
 
+function favoriteButton(storageKey: string): string {
+  const active = isFavorite(storageKey)
+  return `
+        <button
+          type="button"
+          class="game-favorite-btn${active ? ' is-active' : ''}"
+          data-favorite-toggle
+          data-game-key="${escapeAttr(storageKey)}"
+          aria-pressed="${active ? 'true' : 'false'}"
+          aria-label="${active ? 'Remove from favorites' : 'Add to favorites'}"
+        >
+          <span aria-hidden="true">♥</span>
+        </button>`
+}
+
 function gameCard(game: Game, index: number): string {
   const playable = game.status === 'live' && game.url
   const filterAttr = game.genre.toLowerCase()
+  const storageKey = gameStorageKey(game.title, game.url)
 
   const comingSoonOverlay = playable
     ? ''
@@ -115,15 +149,17 @@ function gameCard(game: Game, index: number): string {
 
   if (playable) {
     return `
-    <a
+    <article
       class="game-card reveal is-playable"
-      href="${game.url}"
-      target="_blank"
-      rel="noopener"
+      role="button"
+      tabindex="0"
+      data-game-url="${escapeAttr(game.url)}"
+      data-game-title="${escapeAttr(game.title)}"
+      data-game-key="${escapeAttr(storageKey)}"
       data-filters="${filterAttr}"
-      aria-label="Play ${game.title}"
+      aria-label="Play ${escapeAttr(game.title)}"
       style="--accent:${game.accent}"
-    >${inner}</a>
+    >${favoriteButton(storageKey)}${inner}</article>
   `
   }
 
@@ -137,14 +173,48 @@ function gameCard(game: Game, index: number): string {
   `
 }
 
-function renderGames(filter: string): void {
+function resolveFilteredGames(): Game[] {
+  const genreFiltered =
+    activeGenreFilter.toLowerCase() === 'all'
+      ? games
+      : games.filter((game) => gameMatchesFilter(game, activeGenreFilter))
+
+  if (activeLibrary === 'favorites') {
+    const keys = new Set(getFavoriteKeys())
+    return genreFiltered.filter((game) =>
+      keys.has(gameStorageKey(game.title, game.url)),
+    )
+  }
+
+  if (activeLibrary === 'recent') {
+    const byKey = new Map(
+      games.map((game) => [gameStorageKey(game.title, game.url), game] as const),
+    )
+    return getRecentGames()
+      .map((entry) => byKey.get(entry.key))
+      .filter((game): game is Game => Boolean(game))
+  }
+
+  return genreFiltered
+}
+
+function emptyLibraryMessage(): string {
+  if (activeLibrary === 'favorites') {
+    return 'No favorites yet — tap ♥ on a game to save it here.'
+  }
+  if (activeLibrary === 'recent') {
+    return 'No recently played games — launch a title to see it here.'
+  }
+  return `No ${activeGenreFilter} games yet. More are coming soon.`
+}
+
+function renderGames(filter = activeGenreFilter): void {
   const grid = document.querySelector<HTMLDivElement>('#games-grid')
   const empty = document.querySelector<HTMLParagraphElement>('#filter-empty')
   if (!grid || !empty) return
 
-  const active = filter.toLowerCase()
-  const filtered =
-    active === 'all' ? games : games.filter((game) => gameMatchesFilter(game, filter))
+  activeGenreFilter = filter
+  const filtered = resolveFilteredGames()
 
   if (!games.length) {
     grid.innerHTML = `<p class="games-empty">No games in the arcade yet. Check back soon.</p>`
@@ -152,9 +222,11 @@ function renderGames(filter: string): void {
     return
   }
 
-  grid.innerHTML =
-    filtered.map(gameCard).join('') +
-    `
+  const cardsHtml = filtered.map((game, index) => gameCard(game, index)).join('')
+  const comingCard =
+    activeLibrary || filtered.length === 0
+      ? ''
+      : `
     <article class="coming-card reveal">
       <div class="plus">+</div>
       <h3>Next game loading</h3>
@@ -162,11 +234,78 @@ function renderGames(filter: string): void {
     </article>
   `
 
-  empty.hidden = filtered.length > 0
-  empty.textContent =
-    filtered.length === 0 ? `No ${filter} games yet. More are coming soon.` : ''
+  grid.innerHTML =
+    cardsHtml ||
+    `<p class="games-empty">${emptyLibraryMessage()}</p>`
+
+  grid.innerHTML += comingCard
+
+  empty.hidden = filtered.length > 0 || Boolean(activeLibrary)
+  empty.textContent = filtered.length === 0 ? emptyLibraryMessage() : ''
 
   observeGameCards()
+}
+
+function syncLibraryChipState(): void {
+  const bar = document.querySelector('#games-library-bar')
+  if (!bar) return
+  bar.querySelectorAll<HTMLButtonElement>('[data-library]').forEach((chip) => {
+    const active = chip.dataset.library === activeLibrary
+    chip.classList.toggle('is-active', active)
+    chip.setAttribute('aria-selected', active ? 'true' : 'false')
+  })
+}
+
+function setupLibraryBar(): void {
+  const bar = document.querySelector('#games-library-bar')
+  if (!bar) return
+
+  bar.addEventListener('click', (event) => {
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const chip = target.closest<HTMLButtonElement>('[data-library]')
+    if (!chip) return
+
+    const next = chip.dataset.library as 'favorites' | 'recent'
+    activeLibrary = activeLibrary === next ? null : next
+
+    document.querySelectorAll('#filter-bar .filter-chip').forEach((genreChip) => {
+      genreChip.classList.remove('is-active')
+      genreChip.setAttribute('aria-selected', 'false')
+    })
+    if (activeLibrary) {
+      document.querySelector('#filter-bar .filter-chip[data-filter="All"]')?.classList.add('is-active')
+      activeGenreFilter = 'All'
+    }
+
+    syncLibraryChipState()
+    renderGames(activeGenreFilter)
+  })
+}
+
+function setupFavoriteHandlers(): void {
+  const grid = document.querySelector('#games-grid')
+  if (!grid) return
+
+  grid.addEventListener('click', (event) => {
+    const target = event.target
+    if (!(target instanceof Element)) return
+    const btn = target.closest<HTMLButtonElement>('[data-favorite-toggle]')
+    if (!btn) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const key = btn.dataset.gameKey?.trim()
+    if (!key) return
+
+    const nowFavorite = toggleFavorite(key)
+    btn.classList.toggle('is-active', nowFavorite)
+    btn.setAttribute('aria-pressed', nowFavorite ? 'true' : 'false')
+    btn.setAttribute('aria-label', nowFavorite ? 'Remove from favorites' : 'Add to favorites')
+
+    if (activeLibrary === 'favorites') renderGames()
+  })
 }
 
 function renderFilterBar(filterOptions: string[]): void {
@@ -262,6 +401,9 @@ function setupFilters(): void {
     if (!(target instanceof HTMLButtonElement)) return
     const filter = target.dataset.filter
     if (!filter) return
+
+    activeLibrary = null
+    syncLibraryChipState()
 
     bar.querySelectorAll('.filter-chip').forEach((chip) => {
       chip.classList.toggle('is-active', chip === target)
@@ -411,7 +553,10 @@ export async function initGamesPage(): Promise<void> {
     games = await fetchGames()
     renderFilterBar(buildFilterOptions(games))
     setupFilters()
+    setupLibraryBar()
+    setupFavoriteHandlers()
     setupCardInteractions()
+    setupGamePlayer()
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Could not load games. Please try again later.'

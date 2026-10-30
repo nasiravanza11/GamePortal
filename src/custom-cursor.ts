@@ -52,7 +52,7 @@ export function setupCustomCursor(): void {
       setMode('default')
       return
     }
-    const card = target.closest<HTMLElement>('a.game-card.is-playable')
+    const card = target.closest<HTMLElement>('.game-card.is-playable[data-game-url]')
     if (card) {
       setMode('card')
       return

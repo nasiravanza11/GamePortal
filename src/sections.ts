@@ -24,7 +24,10 @@ export function heroSection(): string {
     </section>`
 }
 
-export function gamesSection(options?: { showFloorIndex?: boolean }): string {
+export function gamesSection(options?: {
+  showFloorIndex?: boolean
+  showLibraryTools?: boolean
+}): string {
   const showFloorIndex = options?.showFloorIndex ?? true
   const heading = showFloorIndex
     ? `
@@ -43,9 +46,28 @@ export function gamesSection(options?: { showFloorIndex?: boolean }): string {
         aria-label="Filter games by type"
       ></div>`
 
+  const showLibraryTools = options?.showLibraryTools ?? false
+  const libraryBar = showLibraryTools
+    ? `
+      <div
+        class="games-library-bar"
+        id="games-library-bar"
+        role="tablist"
+        aria-label="Your library"
+      >
+        <button type="button" class="library-chip" data-library="recent" role="tab" aria-selected="false">
+          Recently played
+        </button>
+        <button type="button" class="library-chip" data-library="favorites" role="tab" aria-selected="false">
+          Favorites
+        </button>
+        <a class="library-chip library-chip-link" href="/contact/#leaderboard">Leaderboard</a>
+      </div>`
+    : ''
+
   const filters = showFloorIndex
     ? filterBar
-    : `<div class="games-toolbar-sentinel" aria-hidden="true"></div><div class="games-toolbar">${filterBar}</div>`
+    : `<div class="games-toolbar-sentinel" aria-hidden="true"></div><div class="games-toolbar">${filterBar}${libraryBar}</div>`
 
   return `
     <section class="games-section page-section${showFloorIndex ? '' : ' games-page-layout'}" id="games">
@@ -74,7 +96,84 @@ export function aboutSection(): string {
     </section>`
 }
 
-export function contactSection(): string {
+function arcadeHubSection(): string {
+  return `
+    <section class="arcade-hub scroll-reveal page-section" id="arcade-hub">
+      <div class="arcade-hub-grid">
+        <div class="leaderboard-panel" id="leaderboard">
+          <span class="arcade-hub-kicker">◢ LEADERBOARD ◣</span>
+          <h2>Top scores</h2>
+          <p class="arcade-hub-lead">Local high scores from this browser. Submit yours after a run.</p>
+          <div class="leaderboard-table-wrap">
+            <table class="leaderboard-table" aria-label="Arcade leaderboard">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Player</th>
+                  <th scope="col">Game</th>
+                  <th scope="col">Score</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-body"></tbody>
+            </table>
+          </div>
+          <form id="leaderboard-form" class="leaderboard-form" novalidate>
+            <h3 class="leaderboard-form-title">Submit a score</h3>
+            <div class="leaderboard-form-row">
+              <label class="contact-field">
+                <span>Player name *</span>
+                <input type="text" name="player" autocomplete="nickname" placeholder="Arcade tag" required maxlength="24" />
+              </label>
+              <label class="contact-field">
+                <span>Game *</span>
+                <input type="text" name="gameTitle" placeholder="Game title" required maxlength="48" />
+              </label>
+              <label class="contact-field">
+                <span>Score *</span>
+                <input type="number" name="score" min="0" step="1" placeholder="0" required />
+              </label>
+            </div>
+            <button type="submit" class="contact-submit">Add score</button>
+            <p class="leaderboard-form-status" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+        <div class="feedback-panel" id="feedback">
+          <span class="arcade-hub-kicker">◢ FEEDBACK ◣</span>
+          <h2>Game feedback</h2>
+          <p class="arcade-hub-lead">Bugs, balance, leaderboard issues, or ideas — we read every note.</p>
+          <form id="feedback-form" class="feedback-form" novalidate>
+            <label class="contact-field">
+              <span>Name *</span>
+              <input type="text" name="name" autocomplete="name" placeholder="Your name" required />
+            </label>
+            <label class="contact-field">
+              <span>Email *</span>
+              <input type="email" name="email" autocomplete="email" placeholder="Your email" required />
+            </label>
+            <label class="contact-field">
+              <span>Topic *</span>
+              <select name="topic" required>
+                <option value="">Select topic</option>
+                <option value="gameplay">Gameplay</option>
+                <option value="leaderboard">Leaderboard</option>
+                <option value="bug">Bug report</option>
+                <option value="idea">New game idea</option>
+              </select>
+            </label>
+            <label class="contact-field contact-field-full">
+              <span>Message *</span>
+              <textarea name="message" rows="4" placeholder="Tell us what happened" required></textarea>
+            </label>
+            <button type="submit" class="contact-submit">Send feedback</button>
+            <p class="feedback-form-status" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+    </section>`
+}
+
+export function contactSection(options?: { includeArcadeHub?: boolean }): string {
+  const hub = options?.includeArcadeHub ? arcadeHubSection() : ''
   return `
     <section class="contact-section scroll-reveal page-section" id="contact">
       <div class="contact-shell">
@@ -122,5 +221,6 @@ export function contactSection(): string {
           </form>
         </div>
       </div>
-    </section>`
+    </section>
+    ${hub}`
 }
