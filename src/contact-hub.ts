@@ -6,7 +6,7 @@ function formatScore(score: number): string {
 
 function renderLeaderboardRows(entries: LeaderboardEntry[]): string {
   if (!entries.length) {
-    return `<tr><td colspan="4" class="leaderboard-empty">No scores yet — be the first to submit one below.</td></tr>`
+    return `<tr><td colspan="4" class="leaderboard-empty">No scores yet.</td></tr>`
   }
 
   return entries
@@ -55,7 +55,7 @@ export function setupContactHub(): void {
     })
 
     refreshLeaderboardTable()
-    if (status) status.textContent = 'Score saved — good run!'
+    if (status) status.textContent = 'Score saved.'
     scoreForm.reset()
   })
 
@@ -68,7 +68,7 @@ export function setupContactHub(): void {
       return
     }
     if (status) {
-      status.textContent = 'Thanks — your feedback helps us improve the arcade.'
+      status.textContent = 'Thanks for your feedback.'
     }
     feedbackForm.reset()
   })

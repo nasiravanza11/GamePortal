@@ -29,6 +29,7 @@ export function gamesSection(options?: {
   showLibraryTools?: boolean
 }): string {
   const showFloorIndex = options?.showFloorIndex ?? true
+  const showLibraryTools = options?.showLibraryTools ?? false
   const heading = showFloorIndex
     ? `
       <div class="section-heading scroll-reveal">
@@ -40,34 +41,47 @@ export function gamesSection(options?: {
 
   const filterBar = `
       <div
-        class="filter-bar scroll-reveal"
+        class="filter-bar${showFloorIndex ? ' scroll-reveal' : ''}"
         id="filter-bar"
         role="tablist"
         aria-label="Filter games by type"
       ></div>`
 
-  const showLibraryTools = options?.showLibraryTools ?? false
-  const libraryBar = showLibraryTools
+  const libraryDock = showLibraryTools
     ? `
-      <div
-        class="games-library-bar"
-        id="games-library-bar"
-        role="tablist"
-        aria-label="Your library"
-      >
-        <button type="button" class="library-chip" data-library="recent" role="tab" aria-selected="false">
-          Recently played
-        </button>
-        <button type="button" class="library-chip" data-library="favorites" role="tab" aria-selected="false">
-          Favorites
-        </button>
-        <a class="library-chip library-chip-link" href="/contact/#leaderboard">Leaderboard</a>
+      <div class="games-library-dock" id="games-library-dock">
+        <div class="games-library-shell" id="games-library-panel">
+          <button
+            type="button"
+            class="games-library-toggle"
+            id="games-library-toggle"
+            aria-expanded="false"
+            aria-controls="games-library-bar"
+            aria-label="Open library menu"
+          >
+            <span class="games-library-toggle-icon" aria-hidden="true">›</span>
+          </button>
+          <nav
+            class="games-library-bar"
+            id="games-library-bar"
+            role="tablist"
+            aria-label="Library filters"
+          >
+            <button type="button" class="library-menu-item" data-library="recent" role="tab" aria-selected="false">
+              Recently played
+            </button>
+            <button type="button" class="library-menu-item" data-library="favorites" role="tab" aria-selected="false">
+              Favorites
+            </button>
+            <a class="library-menu-item library-menu-link" href="/contact/#leaderboard">Leaderboard</a>
+          </nav>
+        </div>
       </div>`
     : ''
 
   const filters = showFloorIndex
     ? filterBar
-    : `<div class="games-toolbar-sentinel" aria-hidden="true"></div><div class="games-toolbar">${filterBar}${libraryBar}</div>`
+    : `<div class="games-toolbar-sentinel" aria-hidden="true"></div><div class="games-toolbar">${filterBar}</div>`
 
   return `
     <section class="games-section page-section${showFloorIndex ? '' : ' games-page-layout'}" id="games">
@@ -75,6 +89,7 @@ export function gamesSection(options?: {
       ${filters}
       <p id="filter-empty" class="filter-empty" hidden></p>
       <div class="games-grid" id="games-grid"></div>
+      ${libraryDock}
     </section>`
 }
 
@@ -101,9 +116,7 @@ function arcadeHubSection(): string {
     <section class="arcade-hub scroll-reveal page-section" id="arcade-hub">
       <div class="arcade-hub-grid">
         <div class="leaderboard-panel" id="leaderboard">
-          <span class="arcade-hub-kicker">◢ LEADERBOARD ◣</span>
-          <h2>Top scores</h2>
-          <p class="arcade-hub-lead">Local high scores from this browser. Submit yours after a run.</p>
+          <h2>Leaderboard</h2>
           <div class="leaderboard-table-wrap">
             <table class="leaderboard-table" aria-label="Arcade leaderboard">
               <thead>
@@ -138,9 +151,7 @@ function arcadeHubSection(): string {
           </form>
         </div>
         <div class="feedback-panel" id="feedback">
-          <span class="arcade-hub-kicker">◢ FEEDBACK ◣</span>
-          <h2>Game feedback</h2>
-          <p class="arcade-hub-lead">Bugs, balance, leaderboard issues, or ideas — we read every note.</p>
+          <h2>Feedback</h2>
           <form id="feedback-form" class="feedback-form" novalidate>
             <label class="contact-field">
               <span>Name *</span>

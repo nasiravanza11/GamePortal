@@ -4,6 +4,7 @@ import {
   resumePdfUrl,
 } from './site-config'
 import { renderGamePlayerShell } from './game-player'
+import { setupPageTransitions } from './page-transitions'
 import { renderSocialLinks } from './social-links'
 
 export type SitePage = 'home' | 'games' | 'about' | 'contact'
@@ -131,7 +132,7 @@ function renderSiteMenu(): string {
   </aside>`
 }
 
-function renderFooter(): string {
+function renderFooter(_current: SitePage): string {
   return `
   <footer class="site-footer">
     <div class="footer-inner">
@@ -210,10 +211,12 @@ export function mountPage(current: SitePage, mainHtml: string): void {
   <div class="arcade-bg" aria-hidden="true"></div>
   ${renderHeader(current)}
   <main id="top">${mainHtml}</main>
-  ${renderFooter()}
+  ${renderFooter(current)}
   ${renderSiteMenu()}
   ${renderSoundConsent()}
   ${renderGamePlayerShell()}`
+
+  setupPageTransitions()
 }
 
 function renderSoundConsent(): string {

@@ -10,6 +10,25 @@ function resolveGameUrl(raw: string): string {
   }
 }
 
+function isSameOriginGame(url: string): boolean {
+  try {
+    return new URL(url, location.href).origin === location.origin
+  } catch {
+    return false
+  }
+}
+
+function applyIframeSandbox(frame: HTMLIFrameElement, url: string): void {
+  if (isSameOriginGame(url)) {
+    frame.removeAttribute('sandbox')
+    return
+  }
+  frame.setAttribute(
+    'sandbox',
+    'allow-scripts allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads',
+  )
+}
+
 export function renderGamePlayerShell(): string {
   return `
   <div class="game-player" data-game-player hidden>
@@ -22,7 +41,6 @@ export function renderGamePlayerShell(): string {
     >
       <header class="game-player-head">
         <div class="game-player-head-copy">
-          <p class="game-player-kicker">◢ NOW PLAYING ◣</p>
           <h2 id="game-player-title" class="game-player-title"></h2>
         </div>
         <button type="button" class="game-player-close" data-game-player-close aria-label="Close game">
@@ -34,7 +52,6 @@ export function renderGamePlayerShell(): string {
           class="game-player-frame"
           title="Game"
           allow="fullscreen; gamepad"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads"
         ></iframe>
       </div>
     </div>
@@ -72,7 +89,9 @@ function openPlayer(url: string, title: string): void {
 
   titleEl.textContent = title
   frame.title = title
-  frame.src = resolveGameUrl(url)
+  const resolved = resolveGameUrl(url)
+  applyIframeSandbox(frame, resolved)
+  frame.src = resolved
 
   root.hidden = false
   document.body.classList.add('game-player-open')

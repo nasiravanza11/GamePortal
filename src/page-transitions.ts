@@ -69,6 +69,13 @@ export function setupPageTransitions(): void {
     target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
   }
 
+  const setOverlayBusy = (busy: boolean): void => {
+    const overlay = getOverlay()
+    if (!overlay) return
+    overlay.setAttribute('aria-hidden', busy ? 'false' : 'true')
+    overlay.setAttribute('aria-busy', busy ? 'true' : 'false')
+  }
+
   const markReady = (): void => {
     root.classList.remove(
       'page-entering',
@@ -78,6 +85,8 @@ export function setupPageTransitions(): void {
       'page-exiting-active',
     )
     root.classList.add('page-ready')
+    getOverlay()?.style.removeProperty('opacity')
+    setOverlayBusy(false)
     sessionStorage.removeItem(STORAGE_KEY)
     requestAnimationFrame(scrollToHashTarget)
   }
@@ -95,6 +104,7 @@ export function setupPageTransitions(): void {
 
     root.classList.remove('page-exiting', 'page-exiting-active', 'page-ready')
     root.classList.add('page-entering', 'page-loading')
+    setOverlayBusy(true)
 
     if (overlay) overlay.style.opacity = '1'
 
@@ -124,9 +134,14 @@ export function setupPageTransitions(): void {
 
   if (sessionStorage.getItem(STORAGE_KEY) === '1') {
     root.classList.add('page-loading')
+    setOverlayBusy(true)
   }
 
   runEnter()
+
+  window.setTimeout(() => {
+    if (!root.classList.contains('page-ready')) markReady()
+  }, 1400)
 
   window.addEventListener('pageshow', (event) => {
     if (!event.persisted) return
@@ -164,6 +179,7 @@ export function setupPageTransitions(): void {
       const overlay = getOverlay()
       root.classList.remove('page-ready')
       root.classList.add('page-exiting')
+      setOverlayBusy(true)
 
       let navigated = false
       const navigate = (): void => {

@@ -199,12 +199,8 @@ function resolveFilteredGames(): Game[] {
 }
 
 function emptyLibraryMessage(): string {
-  if (activeLibrary === 'favorites') {
-    return 'No favorites yet — tap ♥ on a game to save it here.'
-  }
-  if (activeLibrary === 'recent') {
-    return 'No recently played games — launch a title to see it here.'
-  }
+  if (activeLibrary === 'favorites') return 'No favorites yet.'
+  if (activeLibrary === 'recent') return 'No recent games.'
   return `No ${activeGenreFilter} games yet. More are coming soon.`
 }
 
@@ -249,16 +245,91 @@ function renderGames(filter = activeGenreFilter): void {
 function syncLibraryChipState(): void {
   const bar = document.querySelector('#games-library-bar')
   if (!bar) return
-  bar.querySelectorAll<HTMLButtonElement>('[data-library]').forEach((chip) => {
+  bar.querySelectorAll<HTMLElement>('[data-library]').forEach((chip) => {
     const active = chip.dataset.library === activeLibrary
     chip.classList.toggle('is-active', active)
-    chip.setAttribute('aria-selected', active ? 'true' : 'false')
+    if (chip instanceof HTMLButtonElement) {
+      chip.setAttribute('aria-pressed', active ? 'true' : 'false')
+    }
+  })
+
+}
+
+function setLibraryDockOpen(open: boolean): void {
+  const dock = document.querySelector<HTMLElement>('#games-library-dock')
+  const toggle = document.querySelector<HTMLButtonElement>('#games-library-toggle')
+  if (!dock || !toggle) return
+
+  dock.classList.toggle('is-open', open)
+  toggle.setAttribute('aria-expanded', open ? 'true' : 'false')
+  if (open) {
+    toggle.setAttribute('aria-hidden', 'true')
+    toggle.setAttribute('aria-label', 'Library menu open')
+    toggle.tabIndex = -1
+  } else {
+    toggle.removeAttribute('aria-hidden')
+    toggle.setAttribute('aria-label', 'Open library menu')
+    toggle.tabIndex = 0
+  }
+}
+
+function setupLibraryDock(): void {
+  const dock = document.querySelector('#games-library-dock')
+  const toggle = document.querySelector<HTMLButtonElement>('#games-library-toggle')
+  const panel = document.querySelector<HTMLElement>('#games-library-panel')
+  if (!dock || !toggle || !panel) return
+
+  let hideTimer: ReturnType<typeof setTimeout> | undefined
+  const hoverUi = matchMedia('(hover: hover) and (pointer: fine)').matches
+
+  const showDock = (): void => {
+    clearTimeout(hideTimer)
+    setLibraryDockOpen(true)
+  }
+
+  const hideDockSoon = (): void => {
+    clearTimeout(hideTimer)
+    hideTimer = setTimeout(() => setLibraryDockOpen(false), 680)
+  }
+
+  if (hoverUi) {
+    ;[toggle, panel].forEach((el) => {
+      el.addEventListener('mouseenter', showDock)
+      el.addEventListener('mouseleave', hideDockSoon)
+    })
+  } else {
+    toggle.addEventListener('click', (event) => {
+      event.stopPropagation()
+      setLibraryDockOpen(!dock.classList.contains('is-open'))
+    })
+
+    document.addEventListener('click', (event) => {
+      if (!(event.target instanceof Element)) return
+      if (!dock.classList.contains('is-open')) return
+      if (event.target.closest('#games-library-dock')) return
+      setLibraryDockOpen(false)
+    })
+  }
+
+  dock.addEventListener('focusin', showDock)
+  dock.addEventListener('focusout', (event) => {
+    const next = event.relatedTarget
+    if (next instanceof Node && dock.contains(next)) return
+    hideDockSoon()
+  })
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && dock.classList.contains('is-open')) {
+      setLibraryDockOpen(false)
+    }
   })
 }
 
 function setupLibraryBar(): void {
   const bar = document.querySelector('#games-library-bar')
   if (!bar) return
+
+  setupLibraryDock()
 
   bar.addEventListener('click', (event) => {
     const target = event.target
@@ -280,6 +351,7 @@ function setupLibraryBar(): void {
 
     syncLibraryChipState()
     renderGames(activeGenreFilter)
+    document.querySelector('#games-grid')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   })
 }
 

@@ -1,5 +1,4 @@
 import { setupCustomCursor } from './custom-cursor'
-import { setupPageTransitions } from './page-transitions'
 import type { SitePage } from './layout'
 import { heroSubtext, resumeFileName, resumePdfUrl } from './site-config'
 import {
@@ -12,7 +11,7 @@ import {
 
 const REVEAL_BY_PAGE: Record<SitePage, string> = {
   home: '.section-heading, .filter-bar, .about-section, .contact-section',
-  games: '.filter-bar',
+  games: '.games-toolbar, #filter-bar',
   about: '.about-section',
   contact: '.contact-section, .arcade-hub',
 }
@@ -97,10 +96,72 @@ export function setupSoundConsent(): void {
   })
 }
 
+function syncSiteHeaderOffset(header: HTMLElement): void {
+  const hidden = header.classList.contains('is-nav-hidden')
+  const height = header.getBoundingClientRect().height
+  document.documentElement.style.setProperty(
+    '--site-header-offset',
+    hidden ? '0px' : `${Math.round(height)}px`,
+  )
+}
+
+export function setupSiteHeaderScroll(): void {
+  const header = document.querySelector<HTMLElement>('.site-header')
+  if (!header) return
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    syncSiteHeaderOffset(header)
+    return
+  }
+
+  let lastY = window.scrollY
+  let ticking = false
+  const revealAt = 48
+  const deltaMin = 8
+
+  const shouldPinHeader = (): boolean =>
+    document.body.classList.contains('menu-open') ||
+    document.body.classList.contains('game-player-open')
+
+  const update = (): void => {
+    ticking = false
+    const y = window.scrollY
+
+    if (shouldPinHeader()) {
+      header.classList.remove('is-nav-hidden')
+      syncSiteHeaderOffset(header)
+      lastY = y
+      return
+    }
+
+    if (y <= revealAt) {
+      header.classList.remove('is-nav-hidden')
+    } else if (y > lastY + deltaMin) {
+      header.classList.add('is-nav-hidden')
+    } else if (y < lastY - deltaMin) {
+      header.classList.remove('is-nav-hidden')
+    }
+
+    syncSiteHeaderOffset(header)
+    lastY = y
+  }
+
+  const onScroll = (): void => {
+    if (!ticking) {
+      ticking = true
+      requestAnimationFrame(update)
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('resize', () => syncSiteHeaderOffset(header), { passive: true })
+  syncSiteHeaderOffset(header)
+  update()
+}
+
 export function setupSiteMenu(): void {
-  setupPageTransitions()
   setupCustomCursor()
   setupSoundConsent()
+  setupSiteHeaderScroll()
 
   const trigger = document.querySelector<HTMLButtonElement>('.menu-trigger')
   const panel = document.querySelector<HTMLElement>('#site-menu-panel')
@@ -136,6 +197,11 @@ export function setupSiteMenu(): void {
     trigger.setAttribute('aria-expanded', 'true')
     panel.setAttribute('aria-hidden', 'false')
     document.body.classList.add('menu-open')
+    const header = document.querySelector<HTMLElement>('.site-header')
+    if (header) {
+      header.classList.remove('is-nav-hidden')
+      syncSiteHeaderOffset(header)
+    }
   }
 
   trigger.addEventListener('click', () => {
