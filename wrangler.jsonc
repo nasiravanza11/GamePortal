@@ -1,9 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "nextgen-arcade",
+  "name": "rao-arcade",
   "compatibility_date": "2026-08-05",
   "assets": {
     "directory": "./dist",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "404"
   }
 }

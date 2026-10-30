@@ -1,0 +1,33 @@
+---
+description: Site-wide UI tap sounds after user consent (Web Audio, no asset files)
+alwaysApply: true
+---
+
+# UI click / touch sounds
+
+## Consent
+
+1. On first visit, show the sound consent dialog from `renderSoundConsent()` in `src/layout.ts`.
+2. Store preference in `localStorage` key `rao-arcade-sound`: `granted` or `denied`.
+3. **No UI ticks** until the user taps **Allow sound**. Browsers require a user gesture to unlock `AudioContext`; there is no separate OS “sound permission” API for this.
+
+## Implementation
+
+- **Module:** `src/ui-sounds.ts` — Web Audio ticks only (no `.mp3` / `.wav` unless the user asks).
+- **Bootstrap:** `setupSoundConsent()` and `initSiteAudio()` from `src/effects.ts` (via `setupSiteMenu()` on every page entry).
+- **Global taps:** `setupGlobalUiTapSounds()` listens to `pointerdown` (capture, primary button) and calls `playUiSound('tap')` when sound is granted.
+- **Volume:** adjust `UI_SOUND_PEAK` in `src/ui-sounds.ts`.
+
+## Rules
+
+1. Do **not** add per-control sound handlers on every button/link; use the global listener unless a control needs a different variant.
+2. Opt out with `data-no-ui-sound` on a container or control (e.g. future games that ship their own audio).
+3. Do **not** play ticks on text-like fields: `textarea`, `select`, and `input` types other than button/submit/reset/checkbox/radio (typing should stay silent).
+4. Consent dialog stays silent until **Allow**; use `enableSoundFromGesture()` for the first unlock + welcome tone (`open` variant).
+5. New pages must call `setupSiteMenu()` or at least `setupSoundConsent()` + `initSiteAudio()` when granted so audio works site-wide.
+6. Do not autoplay sound before consent or on page load without a click.
+
+## Variants
+
+- `tap` — default for all clicks/touches after consent.
+- `open` / `close` — reserved for menu-style feedback; prefer `tap` via global listener for menu controls unless a distinct tone is requested.

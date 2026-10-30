@@ -1,0 +1,28 @@
+---
+description: Use rounded corners everywhere; no sharp or chamfered edges in GamePortal UI
+alwaysApply: true
+---
+
+# Rounded UI — no sharp edges
+
+## Tokens (`src/style.css` `:root`)
+
+- `--radius-sm` (10px) — small controls, tiles, badges  
+- `--radius-md` (14px) — inputs, cards inner elements  
+- `--radius-lg` (18px) — game cards, panels  
+- `--radius-xl` (22px) — large surfaces  
+- `--radius-pill` (999px) — buttons, filter chips, pills  
+
+## Rules
+
+1. **Never** use `clip-path` polygons, chamfered corners, or `border-radius` below 8px for interactive UI (buttons, inputs, cards, nav controls).
+2. **Always** use `var(--radius-*)` — do not hardcode one-off `2px`, `4px`, or square corners unless drawing microscopic game-art pixels inside card previews.
+3. Buttons and form fields default to rounded via global styles; override with `--radius-pill` or `--radius-md` intentionally, not `0`.
+4. Fused square input+button groups are not allowed; use `gap` and separate rounded controls (pill or `--radius-md`).
+5. New pages, components, and games in this repo must import `style.css` (or the same tokens) and follow this system.
+
+## Check before shipping UI
+
+- No `border-radius: 0` on visible controls  
+- No `clip-path` on layout or buttons  
+- Cards and panels use at least `--radius-lg`  

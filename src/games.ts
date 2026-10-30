@@ -101,6 +101,18 @@ function mapRowToGame(row: GameRow): Game {
   }
 }
 
+export function displayGenreLabel(genre: string): string {
+  const lower = genre.toLowerCase()
+  for (const filter of FILTER_ORDER) {
+    if (lower.includes(filter.toLowerCase())) return filter
+  }
+
+  const first = genre.trim().split(/\s+/)[0]
+  if (!first) return 'Arcade'
+
+  return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase()
+}
+
 export function gameMatchesFilter(game: Game, filter: string): boolean {
   if (filter.toLowerCase() === 'all') return true
   const needle = filter.toLowerCase()

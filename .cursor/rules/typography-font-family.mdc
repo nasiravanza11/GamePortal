@@ -1,0 +1,26 @@
+---
+description: Use one Google font family (DM Sans) across the whole GamePortal UI
+alwaysApply: true
+---
+
+# Typography — single font family
+
+## Font
+
+- **Family:** [DM Sans](https://fonts.google.com/specimen/DM+Sans) (Google Fonts, free).
+- **Token:** `--font-sans` in `src/style.css` (`:root`).
+- **Aliases:** `--heading` and `--mono` must equal `var(--font-sans)` — do not introduce a second display or monospace face unless the user explicitly asks.
+
+## Rules
+
+1. Load the font once in `src/fonts.css`; import that file from `src/style.css` and from any other game/page stylesheet.
+2. Set `font-family: var(--font-sans)` on `html`, `body`, headings, buttons, inputs, textareas, and labels.
+3. Use **font-weight** (400 body, 500–600 UI labels, 700 headings) and size/spacing for hierarchy — not a different typeface.
+4. Do not add Orbitron, Chakra Petch, Share Tech Mono, or other fonts to this project without user approval.
+5. New pages or games under this repo must import the same tokens or `style.css`; no local `font-family` overrides except `inherit`.
+
+## Weights in use
+
+- 400 — body copy, paragraphs, form placeholders  
+- 500–600 — nav, chips, uppercase labels, stats  
+- 700 — hero titles, section headings, buttons  

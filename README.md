@@ -1,4 +1,4 @@
-# NextGen Arcade
+# Rao Arcade
 
 Original browser games you can play instantly — no downloads, no installs.
 
@@ -54,7 +54,7 @@ Expected columns (used by the portal):
 
 ## Deploy
 
-Worker name and assets are configured in `wrangler.jsonc` (`nextgen-arcade`, SPA `not_found_handling`).
+Worker name and assets are configured in `wrangler.jsonc` (`rao-arcade`, SPA `not_found_handling`).
 
 ### Local deploy (uses your `.env`)
 

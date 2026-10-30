@@ -1,0 +1,30 @@
+---
+description: Incremental visual and feature work for the coin toss game — no full rewrites
+alwaysApply: true
+---
+
+# Coin toss — incremental workflow
+
+Follow this order on every task. Do not skip steps.
+
+## Scope of changes
+
+- **Visual improvements:** Change only what the request targets (CSS, one component, one animation). Do **not** rewrite the whole game, restructure files, or refactor unrelated code.
+- **Features:** Do **not** add new mechanics, UI, or polish until the **core coin toss** looks and feels right (flip, landing, feedback, timing).
+
+## Before major changes
+
+- Ensure there is a **known-good Git commit** (or ask the user to commit) before large or risky edits.
+- Prefer small, reviewable diffs over one big replacement.
+
+## Test before moving on
+
+- After each round of changes, **verify the coin toss in the browser** (or describe what the user should check if you cannot run it).
+- Repeat the same core flow several times (toss → result → reset) before starting the **next** feature or visual pass.
+- Fix regressions from the current round before adding anything new.
+
+## When in doubt
+
+- Smallest change that satisfies the request.
+- One concern per change set.
+- Ask before expanding scope beyond what was requested.
